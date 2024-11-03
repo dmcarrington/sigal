@@ -32,6 +32,7 @@ import os
 import pickle
 import random
 import sys
+import requests
 from collections import defaultdict
 from datetime import datetime
 from functools import cached_property
@@ -96,6 +97,8 @@ class Media:
         self.src_path = join(settings["source"], path, self.src_filename)
 
         self.thumb_name = get_thumb(self.settings, self.dst_filename)
+
+        self.paywall_url = make_paywall_url(self.settings, self.src_filename)
 
         self.logger = logging.getLogger(__name__)
 
@@ -796,6 +799,18 @@ class Gallery:
     def title(self):
         """Title of the gallery."""
         return self.settings["title"] or self.albums["."].title
+    
+    def make_paywall_url(self):
+        big_url = self.big_url(self)
+        paywall_request = {"url": big_url, 
+                           "memo": "sigal", 
+                           "description": "sigal paywall", 
+                           "amount": self.settings["paywall_amount"], 
+                           "remembers": self.settings["paywall_remembers"]
+                           }
+        headers = {"Content-Type": "application/json", "X-Api-Key": self.settings["paywall_api_key"]}
+        response = requests.post(self.settings["paywall_url"], json=paywall_request, headers=headers)
+        return response.json()["url"]
 
     def init_pool(self, ncpu):
         try:
