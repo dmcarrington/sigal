@@ -157,8 +157,6 @@ class Media:
     @property
     def big_url(self):
         """URL of the original media."""
-        print("big_url")
-        print(self.big)
         if self.big is not None:
             return url_from_path(self.big)
 
@@ -281,7 +279,6 @@ class Image(Media):
         return get_image_metadata(self.src_path)
 
     def make_paywall_url(self):
-        print(self)
         #TODO: add domain to this from settings
         target_url = super().big_url
         parts = target_url.split("/")
@@ -292,10 +289,10 @@ class Image(Media):
                            "amount": self.settings["paywall_amount"], 
                            "remembers": self.settings["paywall_remembers"]
                            }
-        print(paywall_request)
+
         headers = {"Content-Type": "application/json", "X-Api-Key": self.settings["paywall_api_key"]}
         response = requests.post(self.settings["paywall_url"], json=paywall_request, headers=headers)
-        print(response.json())
+
         return self.settings["paywall_link_base"] + response.json()["id"]
     
     def _get_markdown_metadata(self):
