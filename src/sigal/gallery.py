@@ -98,8 +98,6 @@ class Media:
 
         self.thumb_name = get_thumb(self.settings, self.dst_filename)
 
-        self.paywall_url = make_paywall_url(self.settings, self.src_filename)
-
         self.logger = logging.getLogger(__name__)
 
         signals.media_initialized.send(self)
@@ -159,6 +157,8 @@ class Media:
     @property
     def big_url(self):
         """URL of the original media."""
+        print("big_url")
+        print(self.big)
         if self.big is not None:
             return url_from_path(self.big)
 
@@ -254,6 +254,10 @@ class Image(Media):
             self.thumb_name = get_thumb(self.settings, self.dst_filename)
 
     @cached_property
+    def paywall_url(self):
+        return self.make_paywall_url()
+
+    @cached_property
     def date(self):
         """The date from the EXIF DateTimeOriginal metadata if available, or
         from the file date."""
@@ -276,6 +280,24 @@ class Image(Media):
         """Image file metadata (Exif and IPTC)"""
         return get_image_metadata(self.src_path)
 
+    def make_paywall_url(self):
+        print(self)
+        #TODO: add domain to this from settings
+        target_url = super().big_url
+        parts = target_url.split("/")
+        filename = parts[len(parts) - 1]
+        paywall_request = {"url": target_url, 
+                           "memo": filename, 
+                           "description": filename, 
+                           "amount": self.settings["paywall_amount"], 
+                           "remembers": self.settings["paywall_remembers"]
+                           }
+        print(paywall_request)
+        headers = {"Content-Type": "application/json", "X-Api-Key": self.settings["paywall_api_key"]}
+        response = requests.post(self.settings["paywall_url"], json=paywall_request, headers=headers)
+        print(response.json())
+        return self.settings["paywall_link_base"] + response.json()["id"]
+    
     def _get_markdown_metadata(self):
         """Get metadata from filename.md."""
         meta = super()._get_markdown_metadata()
@@ -799,18 +821,6 @@ class Gallery:
     def title(self):
         """Title of the gallery."""
         return self.settings["title"] or self.albums["."].title
-    
-    def make_paywall_url(self):
-        big_url = self.big_url(self)
-        paywall_request = {"url": big_url, 
-                           "memo": "sigal", 
-                           "description": "sigal paywall", 
-                           "amount": self.settings["paywall_amount"], 
-                           "remembers": self.settings["paywall_remembers"]
-                           }
-        headers = {"Content-Type": "application/json", "X-Api-Key": self.settings["paywall_api_key"]}
-        response = requests.post(self.settings["paywall_url"], json=paywall_request, headers=headers)
-        return response.json()["url"]
 
     def init_pool(self, ncpu):
         try:

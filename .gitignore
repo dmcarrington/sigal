@@ -19,3 +19,4 @@ src/sigal/version.py
 tags
 venv
 ffmpeg2pass-0.log
+sigal.conf.py
