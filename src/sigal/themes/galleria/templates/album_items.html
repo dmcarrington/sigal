@@ -1,7 +1,3 @@
-<div class="icons">
-  <a id="fullscreen"><img src="{{ theme.url }}/img/fullscreen.png"
-                          title="Fullscreen" alt="Fullscreen (f)" /></a>
-</div>
 {% include 'map.html' %}
 {% if album.medias %}
 <div id="gallery"></div>
@@ -18,7 +14,7 @@
 {% block late_js %}
   {% if album.medias %}
     {% macro img_description(media) -%}
-      {%- if media.big -%}<a href='{{ media.big_url }}'>Full size</a>{%- endif -%}
+      {%- if media.paywall_url -%}<a href='{{ media.paywall_url }}'>Buy full-res image via lnbits</a><br><br>{%- endif -%}
       {# clean up tags and whitespace, including newlines, in the description #}
       {%- if media.description -%}<br>{{ media.description }}{%- endif -%}
       {%- if media.exif -%}
@@ -55,7 +51,8 @@
         big: "{{ media.big_url }}",
         {% endif %}
         {% if media.type == "image" %}
-        image: "{{ media.url }}"
+        image: "{{ media.url }}",
+        paywall_url: "{{media.paywall_url}}"
         {% endif %}
         {% if media.type == "video" %}
         image: "{{ theme.url }}/img/empty.png",
@@ -77,17 +74,8 @@
         */
         this.lazyLoadChunks( 50 );
 
-        this.attachKeyboard({
-            right: this.next,
-            left: this.prev,
-            /* Toggle fullscreen display on press of 'f' key */
-            0x46: this.toggleFullscreen,
-        });
-
         var gallery = this;
-        $('#fullscreen').click(function() {
-          gallery.toggleFullscreen();
-        });
+       
 
         $('.icons').appendTo(this.$('container'));
     });

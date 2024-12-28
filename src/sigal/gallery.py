@@ -32,6 +32,7 @@ import os
 import pickle
 import random
 import sys
+import requests
 from collections import defaultdict
 from datetime import datetime
 from functools import cached_property
@@ -251,6 +252,10 @@ class Image(Media):
             self.thumb_name = get_thumb(self.settings, self.dst_filename)
 
     @cached_property
+    def paywall_url(self):
+        return self.make_paywall_url()
+
+    @cached_property
     def date(self):
         """The date from the EXIF DateTimeOriginal metadata if available, or
         from the file date."""
@@ -273,6 +278,27 @@ class Image(Media):
         """Image file metadata (Exif and IPTC)"""
         return get_image_metadata(self.src_path)
 
+    def make_paywall_url(self):
+        print("self:", str(self))
+        gallery = str(self).split("/")[0]
+        print("gallery:", gallery)
+        print(super().big_url)
+        target_url = join(self.settings["deployment_url"], gallery, super().big_url)
+        print("target:",target_url)
+        parts = target_url.split("/")
+        filename = parts[len(parts) - 1]
+        paywall_request = {"url": target_url, 
+                           "memo": "sigal_" + filename, 
+                           "description": "sigal_" + filename, 
+                           "amount": self.settings["paywall_amount"], 
+                           "remembers": self.settings["paywall_remembers"]
+                           }
+
+        headers = {"Content-Type": "application/json", "X-Api-Key": self.settings["paywall_api_key"]}
+        response = requests.post(self.settings["paywall_url"], json=paywall_request, headers=headers)
+
+        return self.settings["paywall_link_base"] + response.json()["id"]
+    
     def _get_markdown_metadata(self):
         """Get metadata from filename.md."""
         meta = super()._get_markdown_metadata()
