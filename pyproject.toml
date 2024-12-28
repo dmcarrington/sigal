@@ -28,6 +28,7 @@ dependencies = [
     "Pillow>=8.0.0",
     "pilkit",
     "natsort",
+    "requests",
 ]
 dynamic = ["version"]
 

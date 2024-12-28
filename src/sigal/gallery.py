@@ -279,13 +279,17 @@ class Image(Media):
         return get_image_metadata(self.src_path)
 
     def make_paywall_url(self):
-        #TODO: add domain to this from settings
-        target_url = super().big_url
+        print("self:", str(self))
+        gallery = str(self).split("/")[0]
+        print("gallery:", gallery)
+        print(super().big_url)
+        target_url = join(self.settings["deployment_url"], gallery, super().big_url)
+        print("target:",target_url)
         parts = target_url.split("/")
         filename = parts[len(parts) - 1]
         paywall_request = {"url": target_url, 
-                           "memo": filename, 
-                           "description": filename, 
+                           "memo": "sigal_" + filename, 
+                           "description": "sigal_" + filename, 
                            "amount": self.settings["paywall_amount"], 
                            "remembers": self.settings["paywall_remembers"]
                            }
